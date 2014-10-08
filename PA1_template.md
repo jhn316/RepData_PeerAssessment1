@@ -3,13 +3,15 @@
 **Loading and preprocessing the data**
 
 Load necessary libraries
-```{r, echo = TRUE, message=FALSE}
+
+```r
 library(dplyr)
 library(tidyr)
 ```
 
 Read data into a data frame
-```{r, echo = TRUE, message=FALSE}
+
+```r
 AD <- read.csv("./activity.csv", header = TRUE)
 ActivityData <- tbl_df(AD)
 ```
@@ -17,36 +19,43 @@ ActivityData <- tbl_df(AD)
 **What is mean total number of steps taken per day?**
 
 Calculates the total number of steps for each given day with NA values removed
-```{r, echo = TRUE, message=FALSE}
+
+```r
 StepsPerDay <- by(ActivityData$steps, 
                   na.rm =TRUE, ActivityData$date, sum)
 ```
 
 Plot a histogram of the steps per day
-```{r, echo = TRUE, message=FALSE}
+
+```r
 hist(StepsPerDay)
 ```
 
+![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4.png) 
+
 Calculate the mean and median of the steps per day and the number of missing values in the data
-```{r, echo = TRUE, message=FALSE}
+
+```r
 MeanPerDay <- mean(StepsPerDay)
 MedianPerDay <- median(StepsPerDay)
 NumMissVal <- (is.na(ActivityData))
 ```
-_**The mean number of steps per day = `r format(MeanPerDay, digits=6, nsmall=1)`**_
+_**The mean number of steps per day = 9354.23**_
 
-_**The median number of steps per day = `r format(MedianPerDay, digits=6, nsmall=1)`**_
+_**The median number of steps per day = 10395**_
 
 **What is the average daily activity pattern?**
 
 Create new lists containing the unique dates and time intervals
-```{r, echo = TRUE, message=FALSE}
+
+```r
 Intervals <- unique(factor(ActivityData$interval))
 Dates <- unique(factor(ActivityData$date))
 ```
 
 Calculates the means for each and every time slot over all the days
-```{r, echo = TRUE, message=FALSE}
+
+```r
 MeansForEachTimeSlot <- list()
 for (i in seq_along(Intervals)){
     MeansForEachTimeSlot[i] <- mean(subset(ActivityData, 
@@ -56,18 +65,22 @@ for (i in seq_along(Intervals)){
 ```
 
 Plot the data in a time series plot
-```{r, echo = TRUE, message=FALSE}
+
+```r
 plot(as.numeric(as.character(Intervals)), MeansForEachTimeSlot, 
      main= "Average steps taken vs. time slot", 
      xlab="Time slot(min)", ylab="Avg. steps taken",type = "l")
 ```
 
+![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8.png) 
+
 Find max value for daily steps and the correspoding time slot.
-```{r, echo = TRUE, message=FALSE}
+
+```r
 TimeSlotWithMax <- Intervals[which.max(MeansForEachTimeSlot)]
 ```
 
-_**The 5-minute interval which, on average across all the days in the dataset, contains the maximum number of steps = `r TimeSlotWithMax`**_
+_**The 5-minute interval which, on average across all the days in the dataset, contains the maximum number of steps = 835**_
 
 **Imputing missing values**
 
@@ -76,49 +89,56 @@ and replaces them with appropriate estimates.
 
 Using the following code it is seen that all NA values are concentrated in the 
 _steps_ column.
-```{r, echo = TRUE, message=FALSE}
+
+```r
 StepsNA = sum(is.na(ActivityData$steps))
 DateNA = sum(is.na(ActivityData$date))
 IntervalNA = sum(is.na(ActivityData$interval))
 ```
-Missing values in the _steps_ column = `r StepsNA`
+Missing values in the _steps_ column = 2304
 
-Missing values in the _date_ column = `r DateNA`
+Missing values in the _date_ column = 0
 
-Missing values in the _interval_ column = `r IntervalNA`
+Missing values in the _interval_ column = 0
 
 In this analysis, a new dataset is created with the missing values replaced with the mean value for each 5 minutes time slot (which was calculated above in the time-series plot section)
-```{r, echo = TRUE, message=FALSE}
+
+```r
 ActivityDataAdjust <- ActivityData %.%
     mutate(steps = ifelse(is.na(steps),as.numeric(MeansForEachTimeSlot),steps))
 ```
 
 Calculate the total number of steps for each given day with NA replaced above and plots a histogram of the steps per day
-```{r, echo = TRUE, message=FALSE}
+
+```r
 StepsPerDayAdjust <- by(ActivityDataAdjust$steps, 
                   na.rm =FALSE, ActivityDataAdjust$date, sum)
 
 hist(StepsPerDayAdjust)
 ```
 
+![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12.png) 
+
 Calculate the mean and median of the steps per day of the adjusted data
-```{r, echo = TRUE, message=FALSE}
+
+```r
 MeanPerDayAdjust <- mean(StepsPerDayAdjust)
 MedianPerDayAdjust <- median(StepsPerDayAdjust)
 ```
-_**The adjusted mean number of steps per day = `r format(MeanPerDayAdjust, digits=6, nsmall=1)`**_
+_**The adjusted mean number of steps per day = 10766.2**_
 
-_**The adjusted median number of steps per day = `r format(MeanPerDayAdjust, digits=6, nsmall=1)`**_
+_**The adjusted median number of steps per day = 10766.2**_
 
 Compare mean and median before and after adjusting via the numbers MnRatio and MdRatio 
-```{r, echo = TRUE, message=FALSE}
+
+```r
 MnRatio <- MeanPerDayAdjust/MeanPerDay
 MdRatio <- MedianPerDayAdjust/MedianPerDay
 ```
 
-_**The Adjusted mean is `r MnRatio` times the original (unadjusted) mean.**_
+_**The Adjusted mean is 1.1509 times the original (unadjusted) mean.**_
 
-_**The Adjusted median is `r MdRatio` times the original (unadjusted) median.**_
+_**The Adjusted median is 1.0357 times the original (unadjusted) median.**_
 
 Replacing the NA values with non-zero numbers results in an increase of both the mean and the median values of the steps per day (approximately 10% for the mean and approximately 3% for the median). This is to be expected since we are adding numbers to the steps per day where there were none previously.
 
@@ -127,13 +147,15 @@ Replacing the NA values with non-zero numbers results in an increase of both the
 Note that the strategy employed herein deviates somewhat from that suggested in the project instructions. However, since the grading rubric does not specify a particular method, I have left this as is. The output is the same as would have been produced otherwise. 
 
 Create data frames that contain a column with days of the week
-```{r, echo = TRUE, message=FALSE}
+
+```r
 ActivityDataAdjustDays <- mutate(ActivityDataAdjust, 
                           dayofweek = weekdays(as.Date(ActivityDataAdjust$date)))
 ```
 
 Create data frames that contain only weekdays and only weekends respectively
-```{r, echo = TRUE, message=FALSE}
+
+```r
 ActivityDataAdjustWeekends <- filter(ActivityDataAdjust, 
                             weekdays(as.Date(ActivityDataAdjust$date)) 
                             == "Saturday"|weekdays(as.Date(ActivityDataAdjust$date)) 
@@ -143,11 +165,11 @@ ActivityDataAdjustWeekdays <- filter(ActivityDataAdjust,
                             !(weekdays(as.Date(ActivityDataAdjust$date)) 
                             == "Saturday"|weekdays(as.Date(ActivityDataAdjust$date)) 
                             == "Sunday"))
-
 ```
 
 Calculates the means for each and every time slot over all the days for weekends and weekends separately
-```{r, echo = TRUE, message=FALSE}
+
+```r
 MeansForEachTimeSlotWeekends <- list()
 for (j in seq_along(Intervals)){
     MeansForEachTimeSlotWeekends[j] <- mean(subset(ActivityDataAdjustWeekends, 
@@ -164,7 +186,8 @@ for (k in seq_along(Intervals)){
 ```
 
 Plot the weekday and weekend data in time series plots
-```{r, echo = TRUE, message=FALSE}
+
+```r
 par(mfrow=c(2,1))
 plot(as.numeric(Intervals), as.numeric(MeansForEachTimeSlotWeekends), 
      main= "Weekends", 
@@ -174,3 +197,5 @@ plot(as.numeric(Intervals), as.numeric(MeansForEachTimeSlotWeekdays),
      main= "Weekdays", 
      xlab="Time slot(min)", ylab="Avg. steps taken",type = "l")
 ```
+
+![plot of chunk unnamed-chunk-18](figure/unnamed-chunk-18.png) 
